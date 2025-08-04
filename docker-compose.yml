@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Development service
+  mikrogrup-itbot-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.local
+    profiles:
+      - dev
+
+  # Production service  
+  mikrogrup-itbot-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    profiles:
+      - prod
+
+  # Production with custom port
+  mikrogrup-itbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped 

@@ -9,21 +9,65 @@ A React-based chatbot application that integrates with Azure Active Directory fo
 - **Modern UI**: Beautiful, responsive interface built with React and Tailwind CSS
 - **Real-time Chat**: Interactive chat interface with typing indicators
 - **Secure**: Enterprise-grade security with Azure AD integration
+- **Docker Ready**: Containerized for easy deployment
 
 ## Prerequisites
 
-- Node.js (version 14 or higher)
+- Node.js (version 14 or higher) OR Docker
 - npm or yarn
 - Azure AD application registration
 - OpenAI API key with access to fine-tuned model
 
-## Setup Instructions
+## Quick Start with Docker 🐳
+
+### Option 1: Using Docker Script (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/ksonur/mkrchatbot.git
+cd mkrchatbot
+
+# Start development environment
+./docker-start.sh dev
+
+# Or start production environment
+./docker-start.sh prod
+```
+
+### Option 2: Using Docker Compose Directly
+
+```bash
+# Development mode with hot reload
+docker-compose --profile dev up --build
+
+# Production mode
+docker-compose up mikrogrup-itbot --build -d
+
+# Custom port (e.g., port 8080)
+PORT=8080 docker-compose up mikrogrup-itbot --build
+```
+
+### Option 3: Using Docker Commands
+
+```bash
+# Build production image
+docker build -t mikrogrup-itbot .
+
+# Run production container
+docker run -p 3000:80 --env-file .env.local mikrogrup-itbot
+
+# Run development container
+docker build -f Dockerfile.dev -t mikrogrup-itbot:dev .
+docker run -p 5173:5173 -v $(pwd):/app mikrogrup-itbot:dev
+```
+
+## Local Development Setup
 
 ### 1. Clone and Install Dependencies
 
 ```bash
-git clone <your-repo-url>
-cd mgchatbot
+git clone https://github.com/ksonur/mkrchatbot.git
+cd mkrchatbot
 npm install
 ```
 
@@ -35,29 +79,19 @@ npm install
 4. Note down:
    - **Application (client) ID**
    - **Directory (tenant) ID**
-5. Under **Authentication**, add `http://localhost:5173` as a redirect URI for Single Page Application
+5. Under **Authentication**, add redirect URIs:
+   - `http://localhost:5173` (development)
+   - `http://localhost:3000` (production)
 
 ### 3. Environment Configuration
 
-Update the values in `src/config/env.ts`:
-
-```typescript
-export const config = {
-  openai: {
-    apiKey: 'your-openai-api-key',
-    model: 'your-fine-tuned-model-id'
-  },
-  azure: {
-    clientId: 'your-azure-client-id',
-    tenantId: 'your-azure-tenant-id',
-    redirectUri: 'http://localhost:5173'
-  }
-};
-```
-
-Or set environment variables:
+Create `.env.local` file:
 
 ```bash
+# Copy template
+cp .env.docker .env.local
+
+# Edit with your actual values
 VITE_OPENAI_API_KEY=your-openai-api-key
 VITE_OPENAI_MODEL=your-fine-tuned-model-id
 VITE_AZURE_CLIENT_ID=your-azure-client-id
@@ -72,6 +106,60 @@ npm run dev
 ```
 
 The application will start on `http://localhost:5173`
+
+## Docker Management Commands
+
+The `docker-start.sh` script provides easy management:
+
+```bash
+./docker-start.sh dev      # Development with hot reload
+./docker-start.sh prod     # Production deployment
+./docker-start.sh build    # Build production image
+./docker-start.sh stop     # Stop all containers
+./docker-start.sh clean    # Remove containers and images
+./docker-start.sh logs     # View container logs
+./docker-start.sh shell    # Access container shell
+```
+
+## Deployment Options
+
+### Development Deployment
+
+- **URL**: `http://localhost:5173`
+- **Features**: Hot reload, source maps, dev tools
+- **Use**: Local development
+
+### Production Deployment
+
+- **URL**: `http://localhost:3000` (or custom PORT)
+- **Features**: Optimized build, nginx serving, compression
+- **Use**: Production environments
+
+### Cloud Deployment
+
+The Docker container can be deployed to:
+
+- **AWS ECS/Fargate**
+- **Google Cloud Run**
+- **Azure Container Instances**
+- **DigitalOcean App Platform**
+- **Heroku Container Registry**
+
+Example for cloud deployment:
+
+```bash
+# Build and tag for registry
+docker build -t your-registry/mikrogrup-itbot:latest .
+
+# Push to registry
+docker push your-registry/mikrogrup-itbot:latest
+
+# Deploy with environment variables
+docker run -p 80:80 \
+  -e VITE_OPENAI_API_KEY=your-key \
+  -e VITE_AZURE_CLIENT_ID=your-client-id \
+  your-registry/mikrogrup-itbot:latest
+```
 
 ## Usage
 
@@ -91,28 +179,51 @@ src/
 │   └── authConfig.ts     # MSAL authentication config
 ├── services/
 │   └── openaiService.ts  # OpenAI API integration
+├── assets/
+│   └── mikrogrup-logo.png # Company logo
 ├── App.tsx               # Main application component
 └── main.tsx             # Application entry point
 ```
 
+## Docker Files
+
+- `Dockerfile` - Multi-stage production build with nginx
+- `Dockerfile.dev` - Development container with hot reload
+- `docker-compose.yml` - Orchestration for dev/prod environments
+- `.dockerignore` - Excludes unnecessary files from build context
+- `nginx.conf` - Production web server configuration
+
 ## Security Notes
 
-- **API Key Security**: In production, avoid exposing API keys in the frontend. Use a backend proxy for OpenAI API calls.
-- **CORS**: Configure proper CORS settings for production deployment
-- **Environment Variables**: Never commit sensitive keys to version control
+- **API Key Security**: API keys are managed through environment variables
+- **CORS**: Properly configured for production deployment
+- **Security Headers**: Nginx includes security headers
+- **Container Security**: Uses Alpine Linux for smaller attack surface
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Authentication Popup Blocked**: Ensure popup blockers are disabled for the application
-2. **CORS Errors**: The OpenAI API calls are configured with `dangerouslyAllowBrowser: true` for development. In production, use a backend service
-3. **Azure AD Configuration**: Ensure redirect URI matches exactly with your Azure AD app registration
+1. **Authentication Popup Blocked**: Ensure popup blockers are disabled
+2. **CORS Errors**: Check environment configuration and redirect URIs
+3. **Docker Permission Issues**: Ensure Docker daemon is running
+4. **Port Conflicts**: Use different ports or stop conflicting services
 
-### Error Messages
+### Docker Debugging
 
-- **"Login failed"**: Check Azure AD configuration and network connectivity
-- **"Failed to get response from AI"**: Verify OpenAI API key and model ID are correct
+```bash
+# Check container status
+docker-compose ps
+
+# View logs
+./docker-start.sh logs
+
+# Access container
+./docker-start.sh shell
+
+# Rebuild without cache
+docker-compose build --no-cache
+```
 
 ## Development
 
@@ -131,6 +242,7 @@ src/
 - Azure MSAL
 - OpenAI API
 - Vite
+- Docker & nginx
 
 ## License
 
