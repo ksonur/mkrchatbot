@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mikrogrup-itbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"  # You can change this port if needed
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    
+    # Resource limits to ensure it doesn't interfere with other apps
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  default:
+    name: mikrogrup-network 
