@@ -21,7 +21,7 @@ if [ ! -f .env.local ]; then
 # Azure AD Configuration
 VITE_AZURE_CLIENT_ID=645a4b0e-9042-474e-beea-f7840c1a8c83
 VITE_AZURE_TENANT_ID=bb364f09-07cf-4eca-9b92-1f26a92d5f3f
-VITE_AZURE_REDIRECT_URI=http://$SERVER_IP:8080
+VITE_AZURE_REDIRECT_URI=http://localhost:5176
 
 # OpenAI Configuration
 VITE_OPENAI_API_KEY=your_openai_api_key_here
