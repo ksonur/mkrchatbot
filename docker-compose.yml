@@ -27,6 +27,8 @@ services:
       - "80:80"
     environment:
       - NODE_ENV=production
+    env_file:
+      - .env.local
     profiles:
       - prod
 
@@ -39,4 +41,6 @@ services:
       - "${PORT:-3000}:80"
     environment:
       - NODE_ENV=production
+    env_file:
+      - .env.local
     restart: unless-stopped 
