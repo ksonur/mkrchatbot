@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, LogOut, MessageCircle, User } from 'lucide-react';
 import mikrogruplogoLogo from '../assets/mikrogrup-logo.png';
-// import { useMsal } from '@azure/msal-react';
+import { useMsal } from '@azure/msal-react';
 import { sendMessageToGPT, type ChatMessage as GPTMessage } from '../services/openaiService';
 
 interface Message {
@@ -23,8 +23,16 @@ interface ChatBotProps {
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({ user, onLogout }) => {
-  // Comment out when bypassing Azure AD
-  // const { instance } = useMsal();
+  const { instance } = useMsal();
+  
+  // Debug: Log user information
+  useEffect(() => {
+    console.log('💁 ChatBot - Current user data:', {
+      name: user.name,
+      email: user.email,
+      timestamp: new Date().toLocaleString()
+    });
+  }, [user]);
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -47,18 +55,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ user, onLogout }) => {
   }, [messages]);
 
   const handleLogout = async () => {
-    // Bypass Azure AD logout for now
-    onLogout();
-    
-    // Uncomment when ready to use Azure AD
-    // try {
-    //   await instance.logoutPopup();
-    //   onLogout();
-    // } catch (error) {
-    //   console.error('Logout failed:', error);
-    //   // Fallback to clearing local state
-    //   onLogout();
-    // }
+    try {
+      await instance.logoutPopup();
+      onLogout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Fallback to clearing local state
+      onLogout();
+    }
   };
 
   const handleSendMessage = async () => {
@@ -144,19 +148,22 @@ const ChatBot: React.FC<ChatBotProps> = ({ user, onLogout }) => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
+            {/* User Info - More Prominent */}
+            <div className="flex items-center space-x-3 bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-2 rounded-xl border border-blue-200 shadow-sm">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center shadow-md">
+                <User className="w-5 h-5 text-white" />
               </div>
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium text-gray-800">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+              <div className="text-right">
+                <p className="text-sm font-bold text-gray-800 leading-tight">{user.name}</p>
+                <p className="text-xs text-blue-600 font-medium">{user.email}</p>
               </div>
             </div>
+            
+            {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-              title="Logout"
+              className="p-2.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 border border-gray-200 hover:border-red-200"
+              title="Çıkış Yap"
             >
               <LogOut className="w-5 h-5" />
             </button>

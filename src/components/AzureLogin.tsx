@@ -1,42 +1,115 @@
 import React, { useState } from 'react';
 import { MessageCircle, Shield, Users, Zap } from 'lucide-react';
 import mikrogruplogoLogo from '../assets/mikrogrup-logo.png';
-// import { useMsal } from '@azure/msal-react';
-// import { loginRequest } from '../config/authConfig';
+import { useMsal } from '@azure/msal-react';
+import { loginRequest } from '../config/authConfig';
+import { getUserFromGraph, formatUserInfo } from '../services/graphService';
 
 interface AzureLoginProps {
   onLogin: (user: { name: string; email: string }) => void;
 }
 
 const AzureLogin: React.FC<AzureLoginProps> = ({ onLogin }) => {
-  // const { instance } = useMsal();
+  const { instance } = useMsal();
   const [isLogging, setIsLogging] = useState(false);
 
   const handleAzureLogin = async () => {
     setIsLogging(true);
     try {
-      // Simulate login for bypass mode
-      setTimeout(() => {
-        const user = {
-          name: 'Test User',
-          email: 'test@company.com'
+      console.log('🔐 Starting Azure AD login...');
+      console.log('📋 Login request config:', loginRequest);
+      console.log('🏢 MSAL instance config:', {
+        clientId: instance.getConfiguration().auth.clientId,
+        authority: instance.getConfiguration().auth.authority,
+        redirectUri: instance.getConfiguration().auth.redirectUri
+      });
+      
+      // Step 1: Authenticate with Azure AD
+      console.log('🔑 Attempting popup login...');
+      const loginResponse = await instance.loginPopup(loginRequest);
+      console.log('✅ Login response received:', loginResponse);
+      
+      if (loginResponse.account) {
+        console.log('👤 Account found:', {
+          username: loginResponse.account.username,
+          name: loginResponse.account.name,
+          tenantId: loginResponse.account.tenantId
+        });
+        
+        // Step 2: Get access token for Microsoft Graph
+        console.log('🎫 Requesting access token...');
+        const tokenRequest = {
+          scopes: ['User.Read'],
+          account: loginResponse.account,
         };
-        onLogin(user);
-        setIsLogging(false);
-      }, 1000);
-
-      // Uncomment for real Azure AD login
-      // const loginResponse = await instance.loginPopup(loginRequest);
-      // if (loginResponse.account) {
-      //   const user = {
-      //     name: loginResponse.account.name || 'Unknown User',
-      //     email: loginResponse.account.username
-      //   };
-      //   onLogin(user);
-      // }
+        
+        const tokenResponse = await instance.acquireTokenSilent(tokenRequest);
+        console.log('✅ Token acquired successfully');
+        
+        // Step 3: Fetch detailed user information from Microsoft Graph
+        try {
+          console.log('📊 Fetching user info from Microsoft Graph...');
+          const graphUser = await getUserFromGraph(tokenResponse.accessToken);
+          const userInfo = formatUserInfo(graphUser);
+          
+          console.log('✅ User info from Graph:', userInfo);
+          
+          // Step 4: Pass formatted user info to parent component
+          onLogin({
+            name: userInfo.name,
+            email: userInfo.email
+          });
+          
+          setIsLogging(false);
+        } catch (graphError) {
+          console.warn('⚠️ Could not fetch from Graph, using basic account info:', graphError);
+          // Fallback to basic account information
+          const user = {
+            name: loginResponse.account.name || 'Unknown User',
+            email: loginResponse.account.username
+          };
+          console.log('🔄 Using fallback user info:', user);
+          onLogin(user);
+          setIsLogging(false);
+        }
+      } else {
+        console.error('❌ No account found in login response');
+        throw new Error('No account found in login response');
+      }
     } catch (error) {
-      console.error('Login failed:', error);
-      alert('Login failed. Please try again.');
+      console.error('❌ Login failed with error:', error);
+      
+      // More detailed error logging with proper typing
+      const msalError = error as any; // MSAL errors have specific properties
+      
+      if (msalError?.errorCode) {
+        console.error('📍 MSAL Error Code:', msalError.errorCode);
+        console.error('📍 MSAL Error Message:', msalError.errorMessage);
+        console.error('📍 MSAL Error Description:', msalError.errorDesc);
+      }
+      
+      if (msalError?.name) {
+        console.error('📍 Error Name:', msalError.name);
+      }
+      
+      if (msalError?.message) {
+        console.error('📍 Error Message:', msalError.message);
+      }
+      
+      // Show user-friendly error based on error type
+      let userMessage = 'Giriş başarısız oldu. Lütfen tekrar deneyin.';
+      
+      if (msalError?.errorCode === 'user_cancelled') {
+        userMessage = 'Giriş işlemi iptal edildi.';
+      } else if (msalError?.errorCode === 'consent_required') {
+        userMessage = 'İzin gerekli. Lütfen yöneticinizle iletişime geçin.';
+      } else if (msalError?.message && msalError.message.includes('popup')) {
+        userMessage = 'Popup penceresi engellendi. Popup engelleyiciyi devre dışı bırakın.';
+      } else if (msalError?.message && msalError.message.includes('redirect')) {
+        userMessage = 'Yönlendirme hatası. Lütfen Azure yöneticinize başvurun.';
+      }
+      
+      alert(userMessage);
       setIsLogging(false);
     }
   };

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure AD Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .config { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Azure AD Configuration Debug</h1>
+    
+    <div class="config">
+        <h3>Current URL:</h3>
+        <p id="current-url"></p>
+    </div>
+    
+    <div class="config">
+        <h3>Expected Configuration:</h3>
+        <p><strong>Client ID:</strong> 645a4b0e-9042-474e-beea-f7840c1a8c83</p>
+        <p><strong>Tenant ID:</strong> bb364f09-07cf-4eca-9b92-1f26a92d5f3f</p>
+        <p><strong>Redirect URI:</strong> <span id="redirect-uri"></span></p>
+    </div>
+    
+    <div class="config">
+        <h3>Azure Portal Requirements:</h3>
+        <p><strong>Add these Redirect URIs:</strong></p>
+        <ul id="redirect-list"></ul>
+    </div>
+    
+    <script>
+        // Get current URL info
+        document.getElementById('current-url').textContent = window.location.origin + window.location.pathname;
+        document.getElementById('redirect-uri').textContent = window.location.origin;
+        
+        // Generate redirect URI list
+        const redirectList = document.getElementById('redirect-list');
+        const redirectUris = [
+            'http://localhost:5173',
+            'http://localhost:5176',
+            window.location.origin,
+            'http://your-server-ip:8080'
+        ];
+        
+        redirectUris.forEach(uri => {
+            const li = document.createElement('li');
+            li.textContent = uri;
+            if (uri === window.location.origin) {
+                li.style.fontWeight = 'bold';
+                li.style.color = 'green';
+                li.textContent += ' ← Current Origin';
+            }
+            redirectList.appendChild(li);
+        });
+    </script>
+</body>
+</html> 
