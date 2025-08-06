@@ -17,17 +17,17 @@ if [ "$1" = "docker" ]; then
     echo "🐳 Setting up for Docker deployment..."
 elif [ "$1" = "local" ]; then
     # Local development setup
-    REDIRECT_URI="http://localhost:5176"
+    REDIRECT_URI="https://asistan.mikrogrup.net"
     echo "💻 Setting up for local development..."
 else
     # Interactive setup
     echo "Choose your setup:"
-    echo "1) Local development (localhost:5176)"
+    echo "1) Local development (localhost:3000)"
     echo "2) Docker/Production"
     read -p "Enter choice (1 or 2): " choice
     
     if [ "$choice" = "1" ]; then
-        REDIRECT_URI="http://localhost:5176"
+        REDIRECT_URI="http://localhost:3000"
         echo "💻 Setting up for local development..."
     else
         SERVER_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "your-server-ip")

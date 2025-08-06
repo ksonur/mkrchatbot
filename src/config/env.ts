@@ -7,6 +7,6 @@ export const config = {
   azure: {
     clientId: import.meta.env.VITE_AZURE_CLIENT_ID || 'e2169084-d5d5-4518-8269-5441b145cb8f',
     tenantId: import.meta.env.VITE_AZURE_TENANT_ID || 'bb364f09-07cf-4eca-9b92-1f26a92d5f3f',
-    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI || 'http://localhost:5173'
+    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI || 'https://asistan.mikrogrup.net'
   }
 }; 
