@@ -37,6 +37,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}
+        - VITE_OPENAI_MODEL=${VITE_OPENAI_MODEL}
+        - VITE_AZURE_CLIENT_ID=${VITE_AZURE_CLIENT_ID}
+        - VITE_AZURE_TENANT_ID=${VITE_AZURE_TENANT_ID}
+        - VITE_AZURE_REDIRECT_URI=${VITE_AZURE_REDIRECT_URI}
     ports:
       - "${PORT:-3000}:80"
     environment:

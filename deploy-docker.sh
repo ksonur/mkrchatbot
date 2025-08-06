@@ -21,7 +21,7 @@ if [ ! -f .env.local ]; then
 # Azure AD Configuration
 VITE_AZURE_CLIENT_ID=645a4b0e-9042-474e-beea-f7840c1a8c83
 VITE_AZURE_TENANT_ID=bb364f09-07cf-4eca-9b92-1f26a92d5f3f
-VITE_AZURE_REDIRECT_URI=http://localhost:5176
+VITE_AZURE_REDIRECT_URI=http://$SERVER_IP:8080
 
 # OpenAI Configuration
 VITE_OPENAI_API_KEY=your_openai_api_key_here
@@ -33,9 +33,20 @@ else
     echo "✅ .env.local already exists"
 fi
 
+# Source environment variables from .env.local
+if [ -f .env.local ]; then
+    echo "📝 Loading environment variables from .env.local..."
+    export $(grep -v '^#' .env.local | xargs)
+fi
+
 # Rebuild with no cache to include latest changes
 echo "🔨 Building Docker image with latest code..."
-docker compose build --no-cache
+docker compose build --no-cache \
+    --build-arg VITE_OPENAI_API_KEY="$VITE_OPENAI_API_KEY" \
+    --build-arg VITE_OPENAI_MODEL="$VITE_OPENAI_MODEL" \
+    --build-arg VITE_AZURE_CLIENT_ID="$VITE_AZURE_CLIENT_ID" \
+    --build-arg VITE_AZURE_TENANT_ID="$VITE_AZURE_TENANT_ID" \
+    --build-arg VITE_AZURE_REDIRECT_URI="$VITE_AZURE_REDIRECT_URI"
 
 # Start on port 8080
 echo "🚀 Starting container on port 8080..."

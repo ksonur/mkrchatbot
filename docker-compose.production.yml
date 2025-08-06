@@ -5,10 +5,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}
+        - VITE_OPENAI_MODEL=${VITE_OPENAI_MODEL}
+        - VITE_AZURE_CLIENT_ID=${VITE_AZURE_CLIENT_ID}
+        - VITE_AZURE_TENANT_ID=${VITE_AZURE_TENANT_ID}
+        - VITE_AZURE_REDIRECT_URI=${VITE_AZURE_REDIRECT_URI}
     ports:
       - "8080:80"  # You can change this port if needed
     environment:
       - NODE_ENV=production
+    env_file:
+      - .env.local
     restart: unless-stopped
     
     # Resource limits to ensure it doesn't interfere with other apps

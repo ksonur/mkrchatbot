@@ -108,6 +108,13 @@ case "$1" in
     "prod")
         echo -e "${GREEN}Starting Mikrogrup ITBOT in production mode...${NC}"
         check_docker
+        check_env
+        
+        # Source environment variables for build
+        if [ -f .env.local ]; then
+            export $(grep -v '^#' .env.local | xargs) 2>/dev/null || true
+        fi
+        
         ${USE_SUDO} docker-compose up mikrogrup-itbot --build -d
         echo -e "${GREEN}✅ Mikrogrup ITBOT is running at http://localhost:8080${NC}"
         ;;
